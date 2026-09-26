@@ -3,44 +3,38 @@ name: Build AgentCore for Android
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'src/**'
-      - 'build.sh'
-      - '.github/workflows/**'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Download Android NDK
-      uses: nuwen/download-action@v2.1.0
-      with:
-        url: 'https://dl.google.com/android/repository/android-ndk-r27c-linux.zip'
-        target: '/tmp/ndk'
-        overwrite: true
-      
-    - name: Extract NDK
-      run: |
-        cd /tmp/ndk
-        unzip -q android-ndk-r27c-linux.zip
-        ls -la android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android* | head -5
-      
-    - name: Build with NDK
-      run: |
-        export ANDROID_NDK_HOME=/tmp/ndk/android-ndk-r27c
-        chmod +x ./build.sh
-        ./build.sh release
-        ls -lh bin/agentcore
-        file bin/agentcore
-      
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: agentcore-arm64
-        path: bin/agentcore
-        if-no-files-found: error
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download NDK
+        run: |
+          echo "Downloading NDK..."
+          curl -sSL -o /tmp/ndk.zip https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
+          echo "Unzipping NDK..."
+          cd /tmp && unzip -q ndk.zip
+          mv android-ndk-r27c /usr/local/ndk
+          echo "Verifying NDK..."
+          ls /usr/local/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android* | head -5
+
+      - name: Compile AgentCore
+        run: |
+          echo "Compiling..."
+          GCC=/usr/local/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android29-gcc
+          STRIP=/usr/local/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip
+          $GCC -O2 -Wall -o bin/agentcore src/agentcore.c
+          $STRIP bin/agentcore
+          echo "Done!"
+          file bin/agentcore
+          ls -lh bin/agentcore
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agentcore-arm64
+          path: bin/agentcore
