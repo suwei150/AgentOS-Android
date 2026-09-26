@@ -12,23 +12,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download NDK
+      - name: Check compiler
         run: |
-          echo "Downloading NDK..."
-          curl -sSL -o /tmp/ndk.zip https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
-          echo "Unzipping NDK..."
-          cd /tmp && unzip -q ndk.zip
-          mv android-ndk-r27c /usr/local/ndk
-          echo "Verifying NDK..."
-          ls /usr/local/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android* | head -5
+          echo "Checking available compilers..."
+          which aarch64-linux-gnu-gcc && aarch64-linux-gnu-gcc --version | head -1 || echo "NOT FOUND"
+          which aarch64-linux-musl-gcc && aarch64-linux-musl-gcc --version | head -1 || echo "NOT FOUND"
+
+      - name: Install cross compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
 
       - name: Compile AgentCore
         run: |
-          echo "Compiling..."
-          GCC=/usr/local/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android29-gcc
-          STRIP=/usr/local/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip
-          $GCC -O2 -Wall -o bin/agentcore src/agentcore.c
-          $STRIP bin/agentcore
+          echo "Compiling AgentCore..."
+          aarch64-linux-gnu-gcc -O2 -Wall -static -o bin/agentcore src/agentcore.c
           echo "Done!"
           file bin/agentcore
           ls -lh bin/agentcore
