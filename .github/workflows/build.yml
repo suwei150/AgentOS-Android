@@ -15,12 +15,12 @@ jobs:
       - name: Install cross compiler
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu musl-tools
+          sudo apt-get install -y gcc-aarch64-linux-gnu libcurl4-openssl-dev pkg-config
 
       - name: Compile AgentCore
         run: |
           mkdir -p bin
-          aarch64-linux-gnu-gcc -O2 -Wall -o bin/agentcore src/agentcore.c
+          aarch64-linux-gnu-gcc -O2 -Wall -o bin/agentcore agentcore.c -lcurl -lpthread -ldl -lrt
           aarch64-linux-gnu-strip bin/agentcore
           echo "Result:"
           file bin/agentcore
