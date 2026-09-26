@@ -1,32 +1,22 @@
-name: Build AgentCore for Android
+name: Build AgentCore
 
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install cross compiler
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu libcurl4-openssl-dev pkg-config
-
-      - name: Compile AgentCore
+      - uses: actions/checkout@v4
+      - name: Install aarch64 gcc
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+      - name: Compile
         run: |
           mkdir -p bin
-          aarch64-linux-gnu-gcc -O2 -Wall -o bin/agentcore agentcore.c -lcurl -lpthread -ldl -lrt
+          aarch64-linux-gnu-gcc -O2 -Wall -o bin/agentcore agentcore.c
           aarch64-linux-gnu-strip bin/agentcore
-          echo "Result:"
           file bin/agentcore
           ls -lh bin/agentcore
-
-      - name: Upload Artifact
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: agentcore-arm64
