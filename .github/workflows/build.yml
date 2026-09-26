@@ -12,22 +12,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check compiler
-        run: |
-          echo "Checking available compilers..."
-          which aarch64-linux-gnu-gcc && aarch64-linux-gnu-gcc --version | head -1 || echo "NOT FOUND"
-          which aarch64-linux-musl-gcc && aarch64-linux-musl-gcc --version | head -1 || echo "NOT FOUND"
-
       - name: Install cross compiler
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+          sudo apt-get install -y gcc-aarch64-linux-gnu musl-tools
 
       - name: Compile AgentCore
         run: |
-          echo "Compiling AgentCore..."
-          aarch64-linux-gnu-gcc -O2 -Wall -static -o bin/agentcore src/agentcore.c
-          echo "Done!"
+          mkdir -p bin
+          aarch64-linux-gnu-gcc -O2 -Wall -o bin/agentcore src/agentcore.c
+          aarch64-linux-gnu-strip bin/agentcore
+          echo "Result:"
           file bin/agentcore
           ls -lh bin/agentcore
 
